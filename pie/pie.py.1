@@ -1,0 +1,38 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def pie(start_month, end_month, exclude_descr):
+    # Load the data
+    data = pd.read_csv('data.csv', parse_dates=['Posting Date'])  # Assuming 'Posting Date' is the right column name
+
+    # Convert posting dates to datetime objects and filter for the date range within the year 2024
+    data['YearMonth'] = data['Posting Date'].dt.strftime('%Y-%m')
+    data = data[(data['Posting Date'].dt.month >= start_month) & (data['Posting Date'].dt.month <= end_month) & (data['Posting Date'].dt.year == 2024)]
+
+    # Convert amounts to numeric, coerce errors
+    data['Amount'] = pd.to_numeric(data['Amount'], errors='coerce')
+
+    # Exclude transactions related to descriptions in exclude_descr
+    for exclude in exclude_descr:
+        data = data[~data['Description'].str.contains(exclude, case=False, na=False)]
+
+    # Aggregate the data by category
+    category_totals = data.groupby('Category')['Amount'].sum().abs()
+
+    # Generate the pie chart
+    plt.figure(figsize=(10, 8))
+    plt.pie(category_totals, labels=category_totals.index, autopct='%1.1f%%', startangle=140)
+    plt.title('Expenses  Total: $6,765')
+    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+    # Display the pie chart
+    plt.show()
+
+# Define start and end month as well as descriptions to exclude
+start_month = 3
+end_month = 3
+exclude_descr = ["Capital One"]
+
+# Call the function with the specified parameters
+pie(start_month, end_month, exclude_descr)
+

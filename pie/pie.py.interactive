@@ -1,0 +1,39 @@
+import pandas as pd
+import plotly.express as px
+from ipywidgets import widgets
+from IPython.display import display
+
+# Assuming the data loading and cleaning steps are similar to the previous snippets
+data = pd.read_csv('data.csv', parse_dates=['Posting Date'])
+data['Amount'] = pd.to_numeric(data['Amount'], errors='coerce')
+data = data[data['Details'] == 'DEBIT']  # Assuming 'DEBIT' signifies expenses
+
+# Function to update and display the pie chart based on selected month range
+def update_chart(month_range):
+    start_month, end_month = month_range
+    filtered_data = data[(data['Posting Date'].dt.month >= start_month) &
+                         (data['Posting Date'].dt.month <= end_month) &
+                         (data['Posting Date'].dt.year == 2024)]
+    
+    if not filtered_data.empty:
+        category_totals = filtered_data.groupby('Category')['Amount'].sum().abs()
+        fig = px.pie(names=category_totals.index, values=category_totals,
+                     title=f'Expenses from {start_month}/2024 to {end_month}/2024')
+        fig.update_traces(textinfo='percent+label')
+        fig.show()
+    else:
+        print("No data available for the selected range.")
+
+# Create a RangeSlider for selecting the month range
+month_range_slider = widgets.IntRangeSlider(
+    value=[1, 12],
+    min=1,
+    max=12,
+    step=1,
+    description='Month Range:',
+    continuous_update=False
+)
+
+# Display the RangeSlider and dynamically update the chart when the value changes
+widgets.interactive(update_chart, month_range=month_range_slider)
+
